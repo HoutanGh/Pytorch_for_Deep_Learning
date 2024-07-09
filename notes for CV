@@ -1,0 +1,14 @@
+linear and non-linear classification
+binary and multiclass classification
+agnostic code
+integrating pytorch with numpy and matplotlib
+convolutional neural network
+computer vision
+batches and minibatches
+confusion matrix
+developing a data loading class for unique data
+data augmentation
+early stopping, scheduling learning rate
+
+
+
