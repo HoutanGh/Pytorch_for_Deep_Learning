@@ -13,16 +13,20 @@ from torch import argmax
 from my_helper_functions import train_step, test_step, eval_model
 from pathlib import Path
 
+# doing 2D images so 2D Convolutional Layers are needed 
+
 class FashionModel(nn.Module):
     def __init__(self, input_shape, hidden_units: int, output_shape: int):
         super().__init__()
 
         self.conv_block_1 = nn.Sequential(
-            nn.Conv2d(in_channels=input_shape,
+            nn.Conv2d(in_channels=input_shape,      # input_shape = 1 for grayscale images and 3 for RGB images
                       out_channels=hidden_units,
-                      kernel_size=3,
-                      stride=1,
-                      padding=1),
+                      kernel_size=3,                # convolutional kernel filter - basically how much of the 
+                                                    # picture it captues at a given time, 3x3 generally enough 
+                                                    # to detect fine details but large enough to capture important patterns
+                      stride=1,                     # the number of pixels by which the filter moves across the input image
+                      padding=1),                   # one pixel is added around the border of image
             nn.ReLU(),
             nn.Conv2d(in_channels=hidden_units,
                       out_channels=hidden_units,
@@ -30,7 +34,9 @@ class FashionModel(nn.Module):
                       stride=1,
                       padding=1),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2)
+            nn.MaxPool2d(kernel_size=2)             # reduces the spatial dims of input, 2x2 kernel means input divided into
+                                                    # 2x2 regions and max value from each region is taken
+                                                    # reduces spatial dims by factor of 2
                 
         )
 
@@ -49,10 +55,17 @@ class FashionModel(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2)                 
         )
+
+        # for forward pass, fully connected linear layers expect 1D input (batch_size, features) but the output 
+        # from the convolutional and pooling layers is typically a 3D tensor (batch_size, channels, height, width)
         self.classifier = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(in_features=hidden_units * 7 * 7,
-                      out_features=output_shape)
+            nn.Flatten(),                               # flattneing the 3D tensor into 1D
+            nn.Linear(in_features=hidden_units * 7 * 7, # linear transformation on the input data
+                                                        # 7 * 7 is the dimensions by the pooling layer
+                                                        # since the input image is 28x28 after two 2x2 max pooling
+                                                        # layers, the spatial dimensions are reduced by a factor of 4
+
+                      out_features=output_shape)        # output shape is 10, representing the 10 different clothing items
 
         )
 
@@ -110,52 +123,26 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
     
 model = FashionModel(input_shape=1, hidden_units=10, output_shape=len(class_names)).to(device)
 
-# loss_fn = nn.CrossEntropyLoss()
-# optimiser = torch.optim.SGD(model.parameters(), lr=0.1)
+loss_fn = nn.CrossEntropyLoss()
+optimiser = torch.optim.SGD(model.parameters(), lr=0.1)
 
-# torch.manual_seed(42)
-# torch.cuda.manual_seed(42)
+torch.manual_seed(42)
+torch.cuda.manual_seed(42)
 
-# start_time_model = timer()
+start_time_model = timer()
 
-# epochs = 3
+epochs = 3
 
-# for epoch in tqdm(range(epochs)):
-#     print(f"Epoch: {epoch} \n--------")
-#     train_step(model, train_dataloader, loss_fn, optimiser, accuracy_fn, device)
-#     test_step(model, test_dataloader, loss_fn, optimiser, accuracy_fn, device)
+for epoch in tqdm(range(epochs)):
+    print(f"Epoch: {epoch} \n--------")
+    train_step(model, train_dataloader, loss_fn, optimiser, accuracy_fn, device)
+    test_step(model, test_dataloader, loss_fn, optimiser, accuracy_fn, device)
 
-# end_time_model = timer()
+end_time_model = timer()
 
-# total_time_model = print_train_time(start_time_model, end_time_model, device)
+total_time_model = print_train_time(start_time_model, end_time_model, device)
 
-# model_results = eval_model(model, test_dataloader, loss_fn, accuracy_fn, device)
-
-
-
-# def save():
-#     MODEL_PATH = Path("models")
-#     MODEL_NAME = "cnn_model.pth"
-#     MODEL_SAVE_PATH = MODEL_PATH / MODEL_NAME
-
-#     print(f"Saving model to: {MODEL_SAVE_PATH}")
-
-#     torch.save(model.state_dict(), MODEL_SAVE_PATH)
-
-
-# # save()
-
-# def load():
-#     MODEL_PATH = Path("models")
-#     MODEL_NAME = "cnn_model.pth"
-#     MODEL_SAVE_PATH = MODEL_PATH / MODEL_NAME
-
-#     loaded_model = FashionModel(input_shape=1, hidden_units=10, output_shape=len(class_names)).to(device)
-
-#     loaded_model.load_state_dict(torch.load(MODEL_SAVE_PATH))
-
-#     return loaded_model
-
+model_results = eval_model(model, test_dataloader, loss_fn, accuracy_fn, device)
 
 
 def make_predictions(model: torch.nn.Module,

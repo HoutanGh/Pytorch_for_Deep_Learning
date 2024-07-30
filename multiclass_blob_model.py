@@ -13,14 +13,15 @@ NUM_CLASSES = 4
 NUM_FEATURES = 2
 RANDOM_SEED = 42
 
+# isotropic Gaussian blobs
 X_blob, y_blob = make_blobs(n_samples=1000,
-                            n_features=NUM_FEATURES,
-                            centers=NUM_CLASSES,
-                            cluster_std=1.5,
+                            n_features=NUM_FEATURES,    #
+                            centers=NUM_CLASSES,        # 4 distinct clusters
+                            cluster_std=1.5,            # standard deviation of the clusters
                             random_state=RANDOM_SEED)
 
 X_blob = torch.from_numpy(X_blob).type(torch.float)
-y_blob = torch.from_numpy(y_blob).type(torch.LongTensor)
+y_blob = torch.from_numpy(y_blob).type(torch.LongTensor) #  long integer format
 
 # print(y_blob.shape)
 
@@ -39,6 +40,7 @@ class BlobModel(nn.Module):
     def __init__(self, input_features, output_features, hidden_units=8):
         super().__init__()
 
+        # make an nn.Sequential so don't have to manually go through all the layers in the foward pass
         self.linear_layer_stack = nn.Sequential(
             nn.Linear(in_features=input_features, out_features=hidden_units),
             nn.ReLU(),
@@ -56,7 +58,7 @@ model = BlobModel(2, 4, 8).to(device)
 
 # print(model)
 
-loss_fn = nn.CrossEntropyLoss()
+loss_fn = nn.CrossEntropyLoss() # for multiclass classification
 optimiser = torch.optim.SGD(model.parameters(),
                             lr=0.1)
 
@@ -88,6 +90,8 @@ for epoch in range(epochs):
     model.train()
 
     y_logits = model(X_blob_train)
+    
+    # softmax used to normalise a vector of logits into a probability distribution
     y_pred = torch.softmax(y_logits, dim=1).argmax(dim=1)
 
     loss = loss_fn(y_logits, y_blob_train)
