@@ -54,6 +54,7 @@ def plot_predictions(train_data=X_train,
 class LinearRegressionModelV2(nn.Module):
     def __init__(self) -> None:
         super().__init__()
+        # instead of defining specific parameters (weights and biases) just define a linear layer
         self.linear_layer = nn.Linear(in_features=1, # what data goes in
                                   out_features=1) # what data goes out
     
@@ -88,9 +89,9 @@ X_test = X_test.to(device)
 y_test = y_test.to(device)
 
 for epoch in range(epochs):
-    model_1.train()
+    model_1.train() # training mode, all gradients that are needed are readied to be calculated
 
-    y_pred = model_1(X_train)
+    y_pred = model_1(X_train) 
 
     loss = loss_fn(y_pred, y_train)
 
@@ -110,7 +111,6 @@ for epoch in range(epochs):
 
 
 #turn into evaluation mode
-
 model_1.eval()
 
 with torch.inference_mode():
