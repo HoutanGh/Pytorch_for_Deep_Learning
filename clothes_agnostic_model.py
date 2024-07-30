@@ -40,6 +40,7 @@ train_features_batch, train_labels_batch = next(iter(train_dataloader))
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
+# just showing the difference by doing a simple neural network, which is suited for 1D data, but mainly just showing the adaptation to agnostic code 
 class FashionModel_1(nn.Module):
     def __init__(self, input_shape: int, hidden_units: int, output_shape: int):
         super().__init__()
@@ -63,7 +64,7 @@ model_1 = FashionModel_1(input_shape=784, hidden_units=10, output_shape=len(clas
 loss_fn = nn.CrossEntropyLoss()
 optimiser = torch.optim.SGD(model_1.parameters(), lr=0.1)
 
-
+# defining functions for the training and testing, and adding a parameter to select the device 
 def train_step(model: torch.nn.Module, 
                data_loader: torch.utils.data.DataLoader, 
                loss_fn: torch.nn.Module, 
