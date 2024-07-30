@@ -7,21 +7,21 @@ from pathlib import Path
 weight = 0.7
 bias = 0.3
 
-# Create data
+# Create data for linear regression
 start = 0
 end = 1
 step = 0.02
-X = torch.arange(start, end, step).unsqueeze(dim=1)
-y = weight * X + bias
+X = torch.arange(start, end, step).unsqueeze(dim=1) # Adds an extra dimension
+y = weight * X + bias # Output is based on a linear function
 
-X[:10], y[:10]
+# X[:10], y[:10]
 
 # Create train/test split
 train_split = int(0.8 * len(X)) # 80% of data used for training set, 20% for testing 
 X_train, y_train = X[:train_split], y[:train_split]
 X_test, y_test = X[train_split:], y[train_split:]
 
-len(X_train), len(y_train), len(X_test), len(y_test)
+# len(X_train), len(y_train), len(X_test), len(y_test) # Checking if the lengths are correct
 
 def plot_predictions(train_data=X_train, 
                      train_labels=y_train, 
@@ -52,10 +52,11 @@ def plot_predictions(train_data=X_train,
 
 
 
-
+# General practice of defining model by subclassing nn.Module
 class LinearRegressionModel(nn.Module):
     def __init__(self):
         super().__init__()
+        # Initialise the weights and bias with random values and set requires_grad to True to be able to track
         self.weights = nn.Parameter(torch.randn(1,
                                                 requires_grad=True,
                                                 dtype=torch.float))
@@ -64,8 +65,10 @@ class LinearRegressionModel(nn.Module):
                                  dtype=torch.float))
         
     def forward(self, x: torch.Tensor) -> torch.Tensor: #overrides nn.Module's own forward function
+        # forward pass (prediction)
         return self.weights * x + self.bias
 
+# Initialises the model and prints the parameters
 def parametering():
     torch.manual_seed(42)
     model_0 = LinearRegressionModel()
@@ -76,21 +79,19 @@ def parametering():
 torch.manual_seed(42)
 model_0 = LinearRegressionModel()
 
-with torch.inference_mode(): # turns of gradient tracking, not training so need to track gradient, so pytorch keep tracking of less data
-   y_preds = model_0(X_test)
+with torch.inference_mode(): # Turns of gradient tracking, not training so need to track gradient, so pytorch keep tracking of less data
+   y_preds = model_0(X_test) 
    
 # plot_predictions(predictions=y_preds)
 
 #loss function
-
 loss_fn = nn.L1Loss()
 
 # print(loss_fn)
 
-#optmiser
-
+# optmiser (Stochastic Gradient Descent)
 optimizer = torch.optim.SGD(params=model_0.parameters(),
-                            lr=0.01)
+                            lr=0.01) # learning rate of 0.01
 
 # print(optimizer)
 
@@ -101,17 +102,17 @@ test_loss_values = []
 
 
 for epoch in range(epochs):
-    model_0.train() # sets all parameters that require gradients to require gradients
+    model_0.train() # sets all parameters that require gradients to require gradients (training mode)
 
     y_pred = model_0(X_train) # forward pass
 
     loss = loss_fn(y_pred, y_train) # calculate loss
     # print(f"Loss: {loss}")
-    optimizer.zero_grad() # optmise the gradient
+    optimizer.zero_grad() # clear all the gradients of all the optimised tensors
 
     loss.backward() # work out the gradient of the loss with respect to the parameters
 
-    optimizer.step() #set the optimiser, would accumulate so need to zero after every loop
+    optimizer.step() # set the optimiser, would accumulate so need to zero after every loop
 
     model_0.eval() # turns off gradient tracking (more than just that), for when you are evaluating your model and don't need it 
     with torch.inference_mode():
