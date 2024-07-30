@@ -78,6 +78,8 @@ class FashionModel(nn.Module):
         # print(f"Output shape after classifier: {x.shape}")
         return x
     
+    
+    # incoporated the save and load functions into to class for convenience
     def save(self, model_name: str, model_path: str) -> torch.nn.Module:
         model_save_path = Path(model_path) / model_name
         print(f"Saving model to: {model_save_path}")
@@ -89,11 +91,12 @@ class FashionModel(nn.Module):
         self.load_state_dict(torch.load(model_save_path, map_location=device))
         self.to(device)
 
-train_data = datasets.FashionMNIST(
-    root="data", #where to download data to
+# FashionMNIST - 60,000 training examples and 10,000 test examples, each of size 28x28 grayscale images in 10 categories
+train_data = datasets.FashionMNIST( 
+    root="data", # where to download data to
     train=True, # test or train?
-    download=True,
-    transform=ToTensor(), # how we want to transform the data
+    download=True, # download from internet if not already present 
+    transform=ToTensor(), # converts PIL Image or Numpy ndarray into Pytorch tensor
     target_transform=None # how we want to transform the labels/targets
 )
 
@@ -107,13 +110,16 @@ test_data = datasets.FashionMNIST(
 
 class_names = train_data.classes
 
-BATCH_SIZE = 32
+BATCH_SIZE = 32 # number of samples that will be processed in a single batch
 
+# DataLoader provides an iterable over a dataset with support for batching, shuffling and parallel data loading
 train_dataloader = DataLoader(dataset=train_data, batch_size=BATCH_SIZE, shuffle=True)
 
-test_dataloader = DataLoader(dataset=test_data, batch_size=BATCH_SIZE, shuffle=False)
+test_dataloader = DataLoader(dataset=test_data, batch_size=BATCH_SIZE, shuffle=False) # don't need to shuffle test data
 
-train_features_batch, train_labels_batch = next(iter(train_dataloader))
+
+# used to inspect a single batch of data to ensure that the data loading process is working correctly
+# train_features_batch, train_labels_batch = next(iter(train_dataloader))
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -123,6 +129,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
     
 model = FashionModel(input_shape=1, hidden_units=10, output_shape=len(class_names)).to(device)
 
+# loss function that combines nn.LogSoftmax and nn.NLLLoss in one single class
 loss_fn = nn.CrossEntropyLoss()
 optimiser = torch.optim.SGD(model.parameters(), lr=0.1)
 
@@ -135,6 +142,7 @@ epochs = 3
 
 for epoch in tqdm(range(epochs)):
     print(f"Epoch: {epoch} \n--------")
+    # functions from my_helper_functions.py that follow similar pattern to other models
     train_step(model, train_dataloader, loss_fn, optimiser, accuracy_fn, device)
     test_step(model, test_dataloader, loss_fn, optimiser, accuracy_fn, device)
 
@@ -144,6 +152,7 @@ total_time_model = print_train_time(start_time_model, end_time_model, device)
 
 model_results = eval_model(model, test_dataloader, loss_fn, accuracy_fn, device)
 
+# model.save()
 
 def make_predictions(model: torch.nn.Module,
                     data: list,
@@ -152,15 +161,16 @@ def make_predictions(model: torch.nn.Module,
     model.eval()
     with torch.inference_mode():
         for sample in data:
-            sample = torch.unsqueeze(sample, dim=0).to(device)
+            sample = torch.unsqueeze(sample, dim=0).to(device) # add extra dim to tensor at dim=0, since the 
+                                                               # model expects the input to have a batch dim
 
             pred_logit = model(sample)
 
-            pred_prob = torch.softmax(pred_logit.squeeze(), dim=0)
+            pred_prob = torch.softmax(pred_logit.squeeze(), dim=0) # need to remove dim for softmax
 
-            pred_probs.append(pred_prob.cpu())
+            pred_probs.append(pred_prob.cpu()) # .cpu when saving
 
-    return torch.stack(pred_probs)
+    return torch.stack(pred_probs) # stacks the list of prediction probability tensors into a single tensor
 
 loaded_model = FashionModel(input_shape=1, hidden_units=10, output_shape=len(class_names)).to(device)
 loaded_model.load("cnn_model.pth", "models", device)
