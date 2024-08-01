@@ -1,5 +1,8 @@
 # Pytorch_for_Deep_Learning
 
+This repository contains notes and models from a PyTorch course, covering basic tensor operations, linear regression, neural network classification, CNNs, and custom dataset handling, demonstrating a progression from fundamental concepts to advanced machine learning models.
+
+
 # Model Files:
 
 ## first_model.py
