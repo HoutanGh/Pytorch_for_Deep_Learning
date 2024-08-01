@@ -1,7 +1,6 @@
 # Pytorch_for_Deep_Learning
 
-# Model Files
-# PyTorch Machine Learning Models
+# Model Files:
 
 ## first_model.py
 - Introduces a basic linear regression model using PyTorch.
